@@ -1,0 +1,12 @@
+
+[[constraint]]
+  name = "github.com/gin-gonic/gin"
+  version = "1.4.0"
+
+[[constraint]]
+  name = "github.com/census-instrumentation/opencensus-go"
+  version = "0.22.0"
+
+[prune]
+  go-tests = true
+  unused-packages = true
