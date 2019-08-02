@@ -2,6 +2,18 @@
 
 
 [[projects]]
+  branch = "master"
+  name = "github.com/Gurpartap/logrus-stack"
+  packages = ["."]
+  revision = "89c00d8a28f43c567d92eb81a2945301a6a9fbb9"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/facebookgo/stack"
+  packages = ["."]
+  revision = "751773369052141c013c6e827a71e8f35c07879c"
+
+[[projects]]
   name = "github.com/gin-contrib/sse"
   packages = ["."]
   revision = "54d8467d122d380a14768b6b4e5cd7ca4755938f"
@@ -26,6 +38,12 @@
   version = "v1.1.7"
 
 [[projects]]
+  name = "github.com/konsorten/go-windows-terminal-sequences"
+  packages = ["."]
+  revision = "f55edac94c9bbba5d6182a4be46d86a2c9b5b50e"
+  version = "v1.0.2"
+
+[[projects]]
   name = "github.com/mattn/go-isatty"
   packages = ["."]
   revision = "1311e847b0cb909da63b5fecfb5370aa66236465"
@@ -42,6 +60,18 @@
   packages = ["."]
   revision = "4b7aa43c6742a2c18fdef89dd197aaae7dac7ccd"
   version = "1.0.1"
+
+[[projects]]
+  branch = "logger"
+  name = "github.com/razorpay/goutils"
+  packages = ["."]
+  revision = "3314e1ecc75b1af0af81f2dc205f6b93e9affe9f"
+
+[[projects]]
+  name = "github.com/sirupsen/logrus"
+  packages = ["."]
+  revision = "839c75faf7f98a33d445d181f3018b5c3409a45e"
+  version = "v1.4.2"
 
 [[projects]]
   name = "github.com/ugorji/go"
@@ -70,6 +100,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "851e39af6334c9548a099be3b7cf3253e4562c2c53e8ec8d35c34bc004be6069"
+  inputs-digest = "20861d964cc8c728f9e78f3bac54c2903c59a4b0495cd1e1527bbd14f700e49f"
   solver-name = "gps-cdcl"
   solver-version = 1
