@@ -1,6 +1,7 @@
 package main
 
 import (
+    "bytes"
     "fmt"
     "github.com/gin-gonic/gin"
     opentracing "github.com/opentracing/opentracing-go"
@@ -32,26 +33,26 @@ func main() {
         })
     })
 
-    r.POST("/shorten", func(c *gin.Context) {
-        callGimli(c, "shorten")
+    r.POST("/v1/shorten", func(c *gin.Context) {
+        body := string(callGimli(c, "shorten"))
 
         c.JSON(200, gin.H{
-            "message": "shorten",
+            "message": body,
         })
     })
 
-    r.POST("/shorten_delayed", func(c *gin.Context) {
-        callGimli(c, "shorten_delayed")
+    r.POST("/v1/shorten_delayed", func(c *gin.Context) {
+        body := string(callGimli(c, "shorten_delayed"))
 
         c.JSON(200, gin.H{
-            "message": "shorten_delayed",
+            "message": body,
         })
     })
 
     r.Run("0.0.0.0:8000")
 }
 
-func callGimli(ctx *gin.Context, val string) {
+func callGimli(ctx *gin.Context, val string) []byte {
     cfg := jaegercfg.Configuration{
         ServiceName: "Sample Client",
         Sampler: &jaegercfg.SamplerConfig{
@@ -97,8 +98,7 @@ func callGimli(ctx *gin.Context, val string) {
     var uri string
     var req *http.Request
 
-    data := url.Values{}
-    data.Set("url", "https://www.google.com")
+    jsonStr := []byte(`{"url":"https://www.google.com"}`)
 
     if val == "ping" {
         ext.HTTPMethod.Set(clientSpan, "GET")
@@ -108,13 +108,13 @@ func callGimli(ctx *gin.Context, val string) {
     } else if val == "shorten" {
         ext.HTTPMethod.Set(clientSpan, "POST")
 
-        uri = gimliurlbase + "/shorten"
-        req, _ = http.NewRequest("POST", uri, strings.NewReader(data.Encode()))
+        uri = gimliurlbase + "/v1/shorten"
+        req, _ = http.NewRequest("POST", uri, bytes.NewBuffer(jsonStr))
     } else {
         ext.HTTPMethod.Set(clientSpan, "POST")
 
-        uri = gimliurlbase + "/shorten_delayed"
-        req, _ = http.NewRequest("POST", uri, strings.NewReader(data.Encode()))
+        uri = gimliurlbase + "/v1/shorten_delayed"
+        req, _ = http.NewRequest("POST", uri, bytes.NewBuffer(jsonStr))
     }
 
     req.Header.Set("X-Trace-ID", traceID)
@@ -132,4 +132,6 @@ func callGimli(ctx *gin.Context, val string) {
     fmt.Println("response Headers:", resp.Header)
     body, _ := ioutil.ReadAll(resp.Body)
     fmt.Println("response Body:", string(body))
+
+    return body
 }
