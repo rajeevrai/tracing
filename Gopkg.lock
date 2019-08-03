@@ -62,6 +62,18 @@
   version = "1.0.1"
 
 [[projects]]
+  name = "github.com/opentracing/opentracing-go"
+  packages = [".","ext","log"]
+  revision = "659c90643e714681897ec2521c60567dd21da733"
+  version = "v1.1.0"
+
+[[projects]]
+  name = "github.com/pkg/errors"
+  packages = ["."]
+  revision = "ba968bfe8b2f7e042a574c888954fccecfa385b4"
+  version = "v0.8.1"
+
+[[projects]]
   branch = "logger"
   name = "github.com/razorpay/goutils"
   packages = ["."]
@@ -72,6 +84,18 @@
   packages = ["."]
   revision = "839c75faf7f98a33d445d181f3018b5c3409a45e"
   version = "v1.4.2"
+
+[[projects]]
+  name = "github.com/uber/jaeger-client-go"
+  packages = [".","config","internal/baggage","internal/baggage/remote","internal/spanlog","internal/throttler","internal/throttler/remote","log","rpcmetrics","thrift","thrift-gen/agent","thrift-gen/baggage","thrift-gen/jaeger","thrift-gen/sampling","thrift-gen/zipkincore","transport","utils"]
+  revision = "2f47546e3facd43297739439600bcf43f44cce5d"
+  version = "v2.16.0"
+
+[[projects]]
+  name = "github.com/uber/jaeger-lib"
+  packages = ["metrics"]
+  revision = "0e30338a695636fe5bcf7301e8030ce8dd2a8530"
+  version = "v2.0.0"
 
 [[projects]]
   name = "github.com/ugorji/go"
@@ -100,6 +124,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "20861d964cc8c728f9e78f3bac54c2903c59a4b0495cd1e1527bbd14f700e49f"
+  inputs-digest = "29972fc933385a55020590c62e083860ce05c9bc0fb67a9845c550a305e6849a"
   solver-name = "gps-cdcl"
   solver-version = 1

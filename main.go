@@ -1,71 +1,135 @@
 package main
 
 import (
-	"context"
-	"fmt"
-	"github.com/gin-gonic/gin"
-	utils "github.com/razorpay/goutils"
-	"io/ioutil"
-	"net/http"
-	"os"
+    "fmt"
+    "github.com/gin-gonic/gin"
+    opentracing "github.com/opentracing/opentracing-go"
+    "github.com/opentracing/opentracing-go/ext"
+    "github.com/uber/jaeger-client-go"
+    jaegercfg "github.com/uber/jaeger-client-go/config"
+    jaegerlog "github.com/uber/jaeger-client-go/log"
+    "github.com/uber/jaeger-lib/metrics"
+    "io/ioutil"
+    "net/url"
+    "log"
+    "math/rand"
+    "net/http"
+    "strings"
+)
+
+const(
+    gimliurlbase = "http://localhost:28090/"
 )
 
 func main() {
-	r := gin.Default()
+    r := gin.Default()
 
-	r.GET("/ping", func(c *gin.Context) {
-		url := os.Getenv("DEST_URL")
+    r.GET("/ping", func(c *gin.Context) {
+        callGimli(c, "ping")
 
-		requestID := generateRequestId()
-		externalRequestID := c.GetHeader(utils.ExternalRequestID)
+        c.JSON(200, gin.H{
+            "message": "pong",
+        })
+    })
 
-		g := gin.Context{}
-		g.Set(utils.RequestID, requestID)
-		g.Set(utils.ExternalRequestID, externalRequestID)
+    r.POST("/shorten", func(c *gin.Context) {
+        callGimli(c, "shorten")
 
-		ctx := context.Background()
-		ctx = context.WithValue(ctx, "gin", &g)
+        c.JSON(200, gin.H{
+            "message": "shorten",
+        })
+    })
 
-		utils.Init()
-		lgr := utils.Get(ctx)
+    r.POST("/shorten_delayed", func(c *gin.Context) {
+        callGimli(c, "shorten_delayed")
 
-		fields := map[string]interface{}{
-			"xxx": "fff",
-		}
+        c.JSON(200, gin.H{
+            "message": "shorten_delayed",
+        })
+    })
 
-		// make http request
-		client := &http.Client{}
-		request, err := http.NewRequest("GET", url, nil)
-
-		if err != nil {
-			lgr.Fatal(fmt.Sprintf("no request: %s", err.Error()), fields)
-		}
-
-		// add headers
-		request.Header.Set(utils.ExternalRequestID, externalRequestID)
-		request.Header.Set(utils.RequestID, requestID)
-
-		resp, err := client.Do(request)
-
-		if err != nil {
-			lgr.Fatal(fmt.Sprintf("error from http request: %s", err.Error()), fields)
-		}
-
-		lgr.Trace("GIMLI_CALL", fields)
-
-		body, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			lgr.Fatal(fmt.Sprintf("error reading request body request: %s", err.Error()), fields)
-		}
-
-		c.JSON(200, gin.H{
-			"message": body,
-		})
-	})
-
-	r.Run()
+    r.Run("0.0.0.0:8000")
 }
 
-func generateRequestId() string {
-	return "mera-id"
+func callGimli(ctx *gin.Context, val string) {
+    cfg := jaegercfg.Configuration{
+        ServiceName: "Sample Client",
+        Sampler: &jaegercfg.SamplerConfig{
+            Type:  jaeger.SamplerTypeConst,
+            Param: 1,
+        },
+        Reporter: &jaegercfg.ReporterConfig{
+            LogSpans: true,
+        },
+    }
+
+    // Example logger and metrics factory. Use github.com/uber/jaeger-client-go/log
+    // and github.com/uber/jaeger-lib/metrics respectively to bind to real logging and metrics
+    // frameworks.
+    jLogger := jaegerlog.StdLogger
+    jMetricsFactory := metrics.NullFactory
+
+    // Initialize tracer with a logger and a metrics factory
+    tracer, closer, err := cfg.NewTracer(
+        jaegercfg.Logger(jLogger),
+        jaegercfg.Metrics(jMetricsFactory),
+    )
+    if err != nil {
+        log.Fatalf("Error:%v", err)
+    }
+
+    traceID := ctx.Request.Header.Get("X-Trace-ID")
+    if traceID == "" {
+        traceID = string(rand.Int())
+    }
+
+    fmt.Println(fmt.Sprintf("x-trace-id: %s", traceID))
+
+    opentracing.SetGlobalTracer(tracer)
+    defer closer.Close()
+
+    clientSpan := tracer.StartSpan("client")
+    defer clientSpan.Finish()
+
+    // Set some tags on the clientSpan to annotate that it's the client span. The additional HTTP tags are useful for debugging purposes.
+    ext.SpanKindRPCClient.Set(clientSpan)
+
+    var uri string
+    var req *http.Request
+
+    data := url.Values{}
+    data.Set("url", "https://www.google.com")
+
+    if val == "ping" {
+        ext.HTTPMethod.Set(clientSpan, "GET")
+
+        uri = gimliurlbase + "/ping"
+        req, _ = http.NewRequest("GET", uri, nil)
+    } else if val == "shorten" {
+        ext.HTTPMethod.Set(clientSpan, "POST")
+
+        uri = gimliurlbase + "/shorten"
+        req, _ = http.NewRequest("POST", uri, strings.NewReader(data.Encode()))
+    } else {
+        ext.HTTPMethod.Set(clientSpan, "POST")
+
+        uri = gimliurlbase + "/shorten_delayed"
+        req, _ = http.NewRequest("POST", uri, strings.NewReader(data.Encode()))
+    }
+
+    req.Header.Set("X-Trace-ID", traceID)
+    ext.HTTPUrl.Set(clientSpan, uri)
+
+    // Inject the client span context into the headers
+    tracer.Inject(clientSpan.Context(), opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(req.Header))
+    resp, err := http.DefaultClient.Do(req)
+    if err != nil {
+        log.Fatalf("Client Error:%v\n", err)
+    }
+    defer resp.Body.Close()
+
+    fmt.Println("response Status:", resp.Status)
+    fmt.Println("response Headers:", resp.Header)
+    body, _ := ioutil.ReadAll(resp.Body)
+    fmt.Println("response Body:", string(body))
 }
