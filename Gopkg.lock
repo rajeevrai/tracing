@@ -77,7 +77,7 @@
   branch = "logger"
   name = "github.com/razorpay/goutils"
   packages = ["."]
-  revision = "3314e1ecc75b1af0af81f2dc205f6b93e9affe9f"
+  revision = "b764b7131244e08f5e98f1996ab34600b2ee91b9"
 
 [[projects]]
   name = "github.com/sirupsen/logrus"
@@ -124,6 +124,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "29972fc933385a55020590c62e083860ce05c9bc0fb67a9845c550a305e6849a"
+  inputs-digest = "d0fed912b34b4a993f4e07cfb9368ff50abeb3c75e3cf37a2bcd92f705a2d270"
   solver-name = "gps-cdcl"
   solver-version = 1
