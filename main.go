@@ -11,11 +11,9 @@ import (
     jaegerlog "github.com/uber/jaeger-client-go/log"
     "github.com/uber/jaeger-lib/metrics"
     "io/ioutil"
-    "net/url"
     "log"
     "math/rand"
     "net/http"
-    "strings"
 )
 
 const(
